@@ -1,0 +1,265 @@
+<!--
+Password Card
+Copyright (C) 2021  Dominik Viererbe
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Password Card</title>
+    <style>
+        @font-face {
+            font-family: 'DejaVu Mono';
+            src: url('./fonts/DejaVu Mono/DejaVuSansMono.ttf');
+        }
+
+        @font-face {
+            font-family: 'DejaVu Mono';
+            font-weight: bold;
+            src: url('./fonts/DejaVu Mono/DejaVuSansMono-Bold.ttf');
+        }
+        
+        * 
+        {
+            font-size: larger;
+            font-family: 'DejaVu Mono';
+        }
+
+        h1 
+        {
+            text-align: center;
+        }
+
+        .card 
+        {
+            width: max-content;
+            margin: auto;
+            outline: black 3px solid;
+        }
+
+        .card .index
+        {
+            font-weight: 600;
+            padding-right: 0.5em;;
+        }
+
+        .card .content 
+        {
+            letter-spacing: 0.2em;
+        }
+
+        .row-0 { background-color: cadetblue; }
+        .row-1 { background-color: goldenrod; }
+        .row-2 { background-color: indianred; }
+        .row-3 { background-color: limegreen; }
+        .row-4 { background-color: royalblue; }
+        .row-5 { background-color: salmon; }
+        .row-6 { background-color: snow; }
+        .row-7 { background-color: tan; }
+        .row-8 { background-color: skyblue; }
+        .row-9 { background-color: seagreen; }
+
+        .seed-display
+        {    
+            width: 80%;
+            margin: 3em auto;
+            word-break: break-all;
+        }
+
+        .seed-display input
+        {
+            font-size: medium;
+            width: 100%;
+        }
+        
+        .seed-display button
+        {
+            font-size: medium;
+            margin-top: 1em;
+        }
+
+        #error-display
+        {
+            color: tomato;
+        }
+    </style>
+</head>
+    <body>
+        <h1>Password Card</h1>
+        <div class="card">
+            <div class="row row-caption">
+                <span class="index">&nbsp;</span>
+                <span class="content">&#9786;&#9730;&#9728;&#9734;&#9733;&#9742;&clubs;&#9819;&diams;&#9632;&#9680;&spades;&#9703;&hearts;&#9633;&#9822;&#9705;&#9818;&#9821;&#9834;&#9881;&#9880;&#9650;&#9823;&#9682;&#9820;</span>
+            </div>
+            <div class="row row-0">
+                <span class="index">0</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-1">
+                <span class="index">1</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-2">
+                <span class="index">2</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-3">
+                <span class="index">3</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-4">
+                <span class="index">4</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-5">
+                <span class="index">5</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-6">
+                <span class="index">6</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-7">
+                <span class="index">7</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-8">
+                <span class="index">8</span>
+                <span class="content content-random"></span>
+            </div>
+            <div class="row row-9">
+                <span class="index">9</span>
+                <span class="content content-random"></span>
+            </div>
+        </div>
+
+        <div class="seed-display">
+            <h2>Current-Seed:</h2>
+            <p id="current-seed"></p>
+
+            <h2>Generate:</h2>
+
+            <label for="seed-input">Seed-Input:</label>
+            <input type="text" id="seed-input" value="" />
+            <p id="error-display">Error</p>
+            <button type="button" onclick="TryParseSeedFromInput()">Regenerate from Seed</button>
+            <button type="button" onclick="GeneratePasswordCard()">Generate Random</button>
+        </div>
+
+        <script>
+            const WIDTH = 26;
+            const RandomContentElements = document.getElementsByClassName("content-random");
+            const CurrentSeedDisplay = document.getElementById("current-seed");
+            const ErrorDisplay = document.getElementById("error-display");
+            const SeedInputElement = document.getElementById("seed-input");
+            const SeedLength = WIDTH * RandomContentElements.length;
+            const SeedSymbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            const ReverseSeedSymbolMap = Array.from(SeedSymbols).reduce((accumulator, currentValue, currentIndex) => accumulator.set(currentValue , currentIndex), new Map());
+            
+            GeneratePasswordCard();
+
+            function GenerateSeed()
+            {
+                const RandomData = new Uint8Array(WIDTH * RandomContentElements.length);
+                crypto.getRandomValues(RandomData);
+
+                return RandomData;
+            }
+
+            function GeneratePasswordCard(seed)
+            {
+                if (!seed) seed = GenerateSeed();
+                if (seed.length != SeedLength) throw 'Invalid Seed Length';
+
+                ErrorDisplay.textContent = "";
+
+                for (let i = 0; i < RandomContentElements.length; ++i)
+                {
+                    const element = RandomContentElements[i];
+
+                    element.textContent = BytesToString(seed.slice(WIDTH * i, WIDTH * (i+1)));
+                }
+
+                CurrentSeedDisplay.textContent = CalculateSeed(seed);
+            }
+
+            function TryParseSeedFromInput() 
+            {
+                try
+                {
+                    const seed = ParseSeed(SeedInputElement.value);
+
+                    GeneratePasswordCard(seed);
+                }   
+                catch (error)
+                {
+                    ErrorDisplay.textContent = error.toString();
+                } 
+            }
+
+            function ParseSeed(string)
+            {
+                if (string.length != SeedLength) throw "Invalid Seed Length";
+
+                let seed = new Uint8Array(SeedLength);
+
+                for (let i = 0; i < seed.length; ++i)
+                {
+                    const symbol = string[i];
+                    let value = ReverseSeedSymbolMap.get(symbol);
+
+                    if (value === undefined) 
+                        throw `Invalid Seed Symbol '${symbol}' at Position ${i}`;
+
+                    seed[i] = value;
+                }
+
+                return seed;
+            }
+
+            function CalculateSeed(bytes)
+            {      
+                let result = "";
+
+                bytes.forEach(element => {
+                    const lower6Bits = element & 0b00111111; 
+                    result += SeedSymbols[lower6Bits]; 
+                });
+
+                return result;
+            }
+
+            function BytesToString(bytes)
+            {
+                let result = "";
+
+                bytes.forEach(element => {
+                result += ByteToSymbol(element); 
+                });
+
+                return result;
+            }
+
+            function ByteToSymbol(byte) 
+            {
+                const PasswordSymbols = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]{|}";    
+
+                const index = byte & 0b00111111;
+                return PasswordSymbols[index];
+            }
+        </script>
+    </body>
+</html>
